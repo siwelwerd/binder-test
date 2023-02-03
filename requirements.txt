@@ -3,4 +3,5 @@ ipywidgets>=8.0.0
 matplotlib
 rpy2
 seaborn
+us
 voila
