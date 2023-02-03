@@ -73,6 +73,7 @@ def fetchCensusData(api_key):
 
 class censusDataFetcher:
     townRace = pandas.DataFrame()
+    censusData = pandas.DataFrame()
     def __init__(self, outputWidget0, outputWidget1):
         outputWidget0.clear_output()
         outputWidget1.clear_output()
@@ -95,38 +96,30 @@ class censusDataFetcher:
         fetchButton.on_click(lambda b: fetchClick(apiText.value))
         def fetchClick(api_key):
             statusBox.children += (ipywidgets.Label("Fetching with census key " + api_key + " ... (this may take a moment)"),)
-            global censusData
-            with outputWidget0:
-                censusData = fetchCensusData(api_key)
+            self.censusData = fetchCensusData(api_key)
             statusBox.children+= (ipywidgets.Label("Complete!"),)
-            if not censusData.empty:
-                stateDropDown.options = censusData.groupby('State Code').groups.keys()
+            if not self.censusData.empty:
+                stateDropDown.options = self.censusData.groupby('State Code').groups.keys()
     
         stateDropDown.observe(lambda b: stateSelected(), names='value')
         def stateSelected():
-            placeDropDown.options = sorted(censusData[censusData['State Code']==stateDropDown.value].index.values.tolist())
+            placeDropDown.options = sorted(self.censusData[self.censusData['State Code']==stateDropDown.value].index.values.tolist())
     
         placeDropDown.observe(lambda b: placeSelected(), names='value')
         def placeSelected():
-            #self.townRace = pandas.DataFrame([["White",censusData.loc[placeDropDown.value]['White']],
-            #                  ["Black or African American", censusData.loc[placeDropDown.value]['Black']],
-            #                  ["American Indian or Alaskan Native", censusData.loc[placeDropDown.value]['AIAN']],
-            #                  ["Asian", censusData.loc[placeDropDown.value]['Asian']],
-            #                  ["Native Hawaiian or Other Pacific Islander", censusData.loc[placeDropDown.value]['NHPI']],
-            #                  ["Some Other Race", censusData.loc[placeDropDown.value]['Some Other Race']] ])
-            #self.townRace.columns=['Race','Population']
-            self.townRace['Population'] = [censusData.loc[placeDropDown.value]['White'],
-                                            censusData.loc[placeDropDown.value]['Black'],
-                                            censusData.loc[placeDropDown.value]['AIAN'],
-                                            censusData.loc[placeDropDown.value]['Asian'],
-                                            censusData.loc[placeDropDown.value]['NHPI'],
-                                            censusData.loc[placeDropDown.value]['Some Other Race'] ]
+            self.townRace['Population'] = [self.censusData.loc[placeDropDown.value]['White'],
+                                            self.censusData.loc[placeDropDown.value]['Black'],
+                                            self.censusData.loc[placeDropDown.value]['AIAN'],
+                                            self.censusData.loc[placeDropDown.value]['Asian'],
+                                            self.censusData.loc[placeDropDown.value]['NHPI'],
+                                            self.censusData.loc[placeDropDown.value]['Some Other Race'] ]
             self.townRace['Population']=self.townRace['Population'].astype('int')
-            self.townRace['Percentage']=self.townRace['Population']/int(censusData.loc[placeDropDown.value]['Total Population'])
+            self.townRace['Percentage']=self.townRace['Population']/int(self.censusData.loc[placeDropDown.value]['Total Population'])
     
             #Show a plot
+            outputWidget1.clear_output()
             with outputWidget1:
-                display("The total population of " + placeDropDown.value + " is " + censusData.loc[placeDropDown.value]['Total Population'])
+                display("The total population of " + placeDropDown.value + " is " + self.censusData.loc[placeDropDown.value]['Total Population'])
                 self.townRace.plot.bar(x='Race',y='Percentage')
                 matplotlib.pyplot.show()
 
